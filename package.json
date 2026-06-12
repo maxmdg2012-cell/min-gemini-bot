@@ -1,9 +1,1 @@
-{
-  "type": "module",
-  "scripts": {
-    "build": "echo 'No build needed'"
-  },
-  "dependencies": {
-    "@google/genai": "^1.3.0"
-  }
-}
+{"type": "module", "dependencies": {"@google/genai": "^1.3.0"}}
