@@ -20,7 +20,6 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Vi tar emot hela listan av meddelanden för att bevara minnet
         const { messages, model } = req.body;
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -34,22 +33,19 @@ export default async function handler(req, res) {
         
         const ai = new GoogleGenAI({ apiKey: apiKey });
 
-        // Välj modell baserat på användarens val
-        let geminiModel = 'gemini-2.5-flash'; 
-        if (model === '1.0') geminiModel = 'gemini-1.5-flash'; 
-        if (model === '3.0') geminiModel = 'gemini-2.5-pro';   
+        // Här använder vi de moderna 2.5-modellerna som stöds fullt ut av det nya biblioteket
+        let geminiModel = 'gemini-2.5-flash'; // Standard för 1.0 och 2.0
+        if (model === '3.0') geminiModel = 'gemini-2.5-pro'; // För avancerade fildiskussioner
 
-        // Formatera om historiken från appens format till Geminis officiella struktur
+        // Formatera om historiken till Geminis struktur
         const formattedContents = messages.map(msg => {
             const role = msg.sender === 'user' ? 'user' : 'model';
             const parts = [];
             
-            // Lägg till texten om den finns
             if (msg.text) {
                 parts.push({ text: msg.text });
             }
             
-            // Om det finns en bifogad fil i meddelandet, extrahera och formatera den
             if (msg.file && msg.file.base64 && msg.file.mimeType) {
                 const base64Data = msg.file.base64.includes(',') 
                     ? msg.file.base64.split(',')[1] 
@@ -71,7 +67,7 @@ export default async function handler(req, res) {
 Du måste svara på det språk som konversationen inleddes med (det allra första meddelandet i historiken).
 Om användaren under konversationens gång ber om att byta språk eller börjar skriva på ett annat språk, måste du neka detta språkbyte och informera användaren om att de behöver starta en ny chatt i sidomenyn för att byta samtalsspråk.`;
 
-        // Skicka hela konversationsflödet till Gemini med instruktioner
+        // Skicka förfrågan med de nya inställningarna
         const response = await ai.models.generateContent({
             model: geminiModel,
             contents: formattedContents,
@@ -84,6 +80,6 @@ Om användaren under konversationens gång ber om att byta språk eller börjar 
 
     } catch (error) {
         console.error("Serverfel:", error);
-        return res.status(500).json({ error: `Serverfel: ${error.message || error}` });
+        return res.status(500).json({ error: `Serverfel: ${error.message || JSON.stringify(error)}` });
     }
 }
