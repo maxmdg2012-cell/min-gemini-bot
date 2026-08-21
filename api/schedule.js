@@ -1,15 +1,27 @@
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
+  // Tillåt anrop från Neocities (CORS)
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  // Hantera webbläsarens säkerhetsanrop (OPTIONS)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Endast POST är tillåtet' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { rawSchedule } = body;
     
-    // Hämtar nyckeln oavsett vad den heter i Vercels inställningar
+    // Hämtar nyckeln från Vercel
     const apiKey = process.env.GEMINI_API_KEY || process.env.Schedule_API || process.env.API_KEY;
 
     if (!rawSchedule) {
@@ -17,7 +29,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (!apiKey) {
-      return res.status(500).json({ error: 'API-nyckel saknas i Vercel.' });
+      return res.status(500).json({ error: 'API-nyckel saknas i Vercel (GEMINI_API_KEY).' });
     }
 
     const promptText = `You are a schedule organizer. Take this messy text and convert it into a clean JSON array of objects.
@@ -54,4 +66,4 @@ ${rawSchedule}`;
   } catch (error) {
     return res.status(500).json({ error: `Serverfel: ${error.message}` });
   }
-};
+}
