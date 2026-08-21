@@ -29,8 +29,8 @@ Strict rules:
 Text:
 ${rawSchedule}`;
 
-    // Ändrat till Googles aktiva modell gemini-2.0-flash
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    // Uppdaterad till gemini-2.5-flash
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(geminiUrl, {
       method: 'POST',
