@@ -29,19 +29,25 @@ Strict rules:
 Text:
 ${rawSchedule}`;
 
-    // Uppdaterad till gemini-2.5-flash
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // Lista på modeller att prova i ordning om någon är överbelastad
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+    let response, data;
 
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: { responseMimeType: "application/json" }
-      })
-    });
+    for (const model of models) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      
+      response = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
 
-    const data = await response.json();
+      data = await response.json();
+      if (response.ok) break; // Om anropet lyckades, hoppa ur loopen och fortsätt
+    }
 
     if (!response.ok) {
       return res.status(500).json({ error: `Gemini Fel (${response.status}): ${data.error?.message || 'Fel från AI'}` });
