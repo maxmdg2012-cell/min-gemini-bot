@@ -8,7 +8,6 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  // Hantera webbläsarens säkerhetsanrop (OPTIONS)
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -21,7 +20,6 @@ export default async function handler(req, res) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { rawSchedule } = body;
     
-    // Hämtar nyckeln från Vercel
     const apiKey = process.env.GEMINI_API_KEY || process.env.Schedule_API || process.env.API_KEY;
 
     if (!rawSchedule) {
@@ -42,7 +40,8 @@ Strict rules:
 Text:
 ${rawSchedule}`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Uppdaterad till den stabila v1-endpointen
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(geminiUrl, {
       method: 'POST',
