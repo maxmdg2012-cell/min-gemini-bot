@@ -29,8 +29,8 @@ Strict rules:
 Text:
 ${rawSchedule}`;
 
-    // Lista på modeller att prova i ordning om någon är överbelastad
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+    // Testar Googles rekommenderade modeller i ordning
+    const models = ['gemini-3.5-flash-lite', 'gemini-2.5-flash'];
     let response, data;
 
     for (const model of models) {
@@ -46,7 +46,7 @@ ${rawSchedule}`;
       });
 
       data = await response.json();
-      if (response.ok) break; // Om anropet lyckades, hoppa ur loopen och fortsätt
+      if (response.ok) break;
     }
 
     if (!response.ok) {
