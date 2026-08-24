@@ -12,7 +12,6 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    // Nu letar vi efter antingen text ELLER en bild (i base64-format)
     const { rawSchedule, imageBase64, imageMimeType } = body;
     
     const apiKey = process.env.GEMINI_API_KEY || process.env.Schedule_API || process.env.API_KEY;
@@ -22,20 +21,26 @@ export default async function handler(req, res) {
     }
     if (!apiKey) return res.status(500).json({ error: 'API-nyckel saknas i Vercel.' });
 
-    const promptText = `You are a schedule organizer. Extract the schedule from the provided text or image and convert it into a clean JSON array of objects.
-Strict rules:
-1. LANGUAGE: Detect automatically. Write output in the EXACT same language as input.
-2. STRUCTURE: Every object must have these keys: "day", "time", "activity", "location".
-3. MISSING DATA: Use "N/A".
-4. OUTPUT: Return only valid raw JSON array.
+    // Världsklass-prompt som fixar alla språk, förkortningar och snygg sortering
+    const promptText = `You are a world-class universal schedule organizer and OCR expert. 
+Extract the schedule from the provided input (text or image) regardless of international layout or language.
 
-Text (if any):
-${rawSchedule || 'Se bifogad bild.'}`;
+Strict Rules:
+1. LANGUAGE & ABBREVIATIONS: Detect the input language automatically. Expand all local abbreviations into full formal words in that SAME language (e.g., in Swedish expand "tis" -> "Tisdag", "mån" -> "Måndag", "ma" -> "Matematik"; in English expand "Mon" -> "Monday", "Tue" -> "Tuesday", etc.).
+2. TIME NORMALIZATION: Standardize times into clean formats (e.g. "08:00 - 09:30" or "14:00").
+3. STRUCTURE: Every object in the list MUST have these exact 4 keys:
+   - "day": Full day name or date (e.g., "Tisdag", "Monday").
+   - "time": Clean time range or "N/A".
+   - "activity": Full name of the subject/meeting/event.
+   - "location": Room, building, address, or "N/A".
+4. CHRONOLOGICAL ORDER: Sort the objects strictly by day of the week and start time, like a realistic schedule.
+5. OUTPUT: Return ONLY a valid raw JSON array of these objects. No preamble, no Markdown wrapping.
 
-    // Bygg upp det som ska skickas till Gemini
+Input Text (if provided):
+${rawSchedule || 'Analyze attached image.'}`;
+
     let parts = [{ text: promptText }];
     
-    // Om en bild skickades med från hemsidan, lägg till den!
     if (imageBase64 && imageMimeType) {
       parts.push({
         inlineData: {
